@@ -12,6 +12,7 @@ import { useCollectionEnrollment } from "@/hooks/useCollectionEnrollment";
 import { useContentRead, useContentSearch } from "@/hooks/useContent";
 import { useQumlContent } from "@/hooks/useQumlContent";
 import { useContentPlayer } from "@/hooks/useContentPlayer";
+import { useContentStateUpdate } from "@/hooks/useContentStateUpdate";
 import { mapSearchContentToRelatedContentItems } from "@/services/collection";
 import CollectionOverview from "@/components/collection/CollectionOverview";
 import CollectionSidebar from "@/components/collection/CollectionSidebar";
@@ -38,7 +39,7 @@ const CollectionDetailPage = () => {
   const collectionData = collectionDataFromApi ?? null;
   const enrollment = useCollectionEnrollment(collectionId, batchIdParam, collectionData, isAuthenticated);
   const { isEnrolledInCurrentBatch, contentStatusMap, courseProgressProps, batches, batchListLoading, batchListError,
-    firstCertPreviewUrl, hasCertificate, joinLoading, joinError, handleJoinCourse } = enrollment;
+    firstCertPreviewUrl, hasCertificate, joinLoading, joinError, handleJoinCourse, effectiveBatchId } = enrollment;
   const hasBatchInRoute = !!batchIdParam;
   const [selectedBatchId, setSelectedBatchId] = useState("");
 
@@ -77,9 +78,21 @@ const CollectionDetailPage = () => {
   const playerIsLoading = contentId ? (isQumlContent ? qumlIsLoading : contentIsLoading ) : false;
   const playerError = isQumlContent ? qumlError : contentError;
 
+  const handleContentStateFromTelemetry = useContentStateUpdate({
+    collectionId,
+    contentId: contentId ?? undefined,
+    effectiveBatchId,
+    isEnrolledInCurrentBatch,
+    mimeType: playerMetadata?.mimeType,
+  });
+
   const { handlePlayerEvent, handleTelemetryEvent } = useContentPlayer({
     onPlayerEvent: (event) => console.log('Collection content player event:', event),
-    onTelemetryEvent: (event) => console.log('Collection content telemetry event:', event),
+    onTelemetryEvent: (event) => {
+      console.log('Collection content telemetry event:', event);
+      handleContentStateFromTelemetry(event);
+    },
+    enableLogging: false,
   });
 
   const [expandedModules, setExpandedModules] = useState<string[]>([]);

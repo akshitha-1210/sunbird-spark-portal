@@ -10,6 +10,7 @@ describe('BatchService', () => {
       get: vi.fn().mockResolvedValue({ data: { response: {} }, status: 200, headers: {} }),
       post: vi.fn(),
       put: vi.fn(),
+      patch: vi.fn(),
       delete: vi.fn(),
       updateHeaders: vi.fn(),
     };
@@ -134,5 +135,31 @@ describe('BatchService', () => {
 
     expect(result.data).toEqual(mockData);
     expect(result.status).toBe(200);
+  });
+
+  it('should call client.patch with correct url and payload for contentStateUpdate', async () => {
+    mockClient.patch = vi.fn().mockResolvedValue({ data: { result: {} }, status: 200, headers: {} });
+
+    const service = new BatchService();
+    await service.contentStateUpdate({
+      userId: 'user_1',
+      courseId: 'course_1',
+      batchId: 'batch_1',
+      contents: [{ contentId: 'content_a', status: 1 }],
+    });
+
+    expect(mockClient.patch).toHaveBeenCalledWith('/course/v1/content/state/update', {
+      request: {
+        userId: 'user_1',
+        contents: [
+          {
+            contentId: 'content_a',
+            status: 1,
+            courseId: 'course_1',
+            batchId: 'batch_1',
+          },
+        ],
+      },
+    });
   });
 });
