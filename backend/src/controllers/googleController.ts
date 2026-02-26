@@ -71,9 +71,10 @@ export const handleGoogleAuthCallback = async (req: Request, res: Response) => {
         redirectUrl = userExists ? '/home' : '/onboarding';
         return res.redirect(redirectUrl);
     } catch (error) {
-        logger.error('Error in Google OAuth callback:', error);
+        const errorCode = error instanceof Error ? error.message : 'GOOGLE_SIGN_IN_FAILED';
+        logger.error('Error in Google OAuth callback:', errorCode, error);
         const safeErrorCallback = validateRedirectUrl(req.session?.googleOAuth?.error_callback);
-        redirectUrl = `${safeErrorCallback}?error=GOOGLE_SIGN_IN_FAILED`;
+        redirectUrl = `${safeErrorCallback}?error=${errorCode}`;
         return res.redirect(redirectUrl);
     } finally {
         delete req.session.googleOAuth;

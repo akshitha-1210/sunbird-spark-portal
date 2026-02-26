@@ -291,14 +291,23 @@ export const handleUserAuthentication = async (
         const { regenerateSession } = await import('../utils/sessionUtils.js');
         await regenerateSession(req);
 
-        const tokenSubject = _.get(req, 'kauth.grant.access_token.content.sub');
+        const tokenSubject = _.get(req, 'kauth.grant.access_token.content.sub') as string | undefined;
+        // sub format from SPI mapper: "f:<federationId>:<sunbirdUserId>" — take the last segment
         const userIdFromToken = tokenSubject ? _.last(_.split(tokenSubject, ':')) : undefined;
+        logger.info(`Google SSO: tokenSubject=${tokenSubject}, resolved userId=${userIdFromToken}`);
         req.session.userId = userIdFromToken;
 
         if (userIdFromToken) {
-            const { fetchUserById, setUserSession } = await import('./userService.js');
-            const userProfileResponse = await fetchUserById(userIdFromToken, req);
-            await setUserSession(req, userProfileResponse);
+            try {
+                const { fetchUserById, setUserSession } = await import('./userService.js');
+                const userProfileResponse = await fetchUserById(userIdFromToken, req);
+                await setUserSession(req, userProfileResponse);
+            } catch (profileError) {
+                // Non-fatal: user authenticated successfully; profile will load on next request.
+                // Common cause: new user not yet propagated in Sunbird, or SPI mapper
+                // not yet embedding Sunbird userId in sub for this client.
+                logger.warn('Google SSO: could not load user profile, login will proceed without it:', profileError);
+            }
         }
     } catch (error) {
         logger.error('Error setting up user session after Google SSO:', error);
