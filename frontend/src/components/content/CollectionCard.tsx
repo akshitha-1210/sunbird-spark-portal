@@ -2,6 +2,7 @@ import { FiStar } from "react-icons/fi";
 import { Badge } from "@/components/common/Badge";
 import { Link } from "react-router-dom";
 import { ContentSearchItem } from "@/types/workspaceTypes";
+import ContentThumbnailPlaceholder from "@/components/common/ContentThumbnailPlaceholder";
 
 interface ContentCardProps {
   item: ContentSearchItem;
@@ -21,7 +22,10 @@ const CollectionCard = ({ item }: ContentCardProps) => {
                 className="resource-card-image"
               />
             ) : (
-              <div className="resource-card-image bg-black" />
+              <ContentThumbnailPlaceholder
+                title={item.name || "Untitled"}
+                className="resource-card-image"
+              />
             )}
           </div>
         </div>

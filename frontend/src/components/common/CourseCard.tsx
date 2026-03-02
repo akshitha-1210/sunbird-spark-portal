@@ -2,6 +2,7 @@ import { FiStar } from "react-icons/fi";
 import { Badge } from "@/components/common/Badge";
 import { Link } from "react-router-dom";
 import { useAppI18n } from "@/hooks/useAppI18n";
+import ContentThumbnailPlaceholder from "@/components/common/ContentThumbnailPlaceholder";
 
 export interface ContentCourse {
     id: string;
@@ -32,11 +33,18 @@ export const CourseCard = ({ course }: CourseCardProps) => {
                 {/* Image with padding */}
                 <div className="px-[1.25rem] pt-[1.25rem] w-full">
                     <div className="relative overflow-hidden rounded-[1.25rem] h-[10.125rem] w-full">
-                        <img
-                            src={course.image}
-                            alt={course.title}
-                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-[1.25rem]"
-                        />
+                        {course.image ? (
+                            <img
+                                src={course.image}
+                                alt={course.title}
+                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-[1.25rem]"
+                            />
+                        ) : (
+                            <ContentThumbnailPlaceholder
+                                title={course.title}
+                                className="absolute inset-0 w-full h-full rounded-[1.25rem] transition-transform duration-300 group-hover:scale-105"
+                            />
+                        )}
                     </div>
                 </div>
 

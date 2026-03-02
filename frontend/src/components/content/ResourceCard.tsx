@@ -2,6 +2,7 @@ import { FiArrowRight } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useAppI18n } from "@/hooks/useAppI18n";
 import { ContentSearchItem } from "@/types/workspaceTypes";
+import ContentThumbnailPlaceholder from "@/components/common/ContentThumbnailPlaceholder";
 
 interface ResourceCardProps {
   item: ContentSearchItem;
@@ -43,7 +44,10 @@ const ResourceCard = ({ item }: ResourceCardProps) => {
               className="resource-card-image" 
             />
           ) : (
-            <div className="resource-card-image bg-black" />
+            <ContentThumbnailPlaceholder
+              title={item.name || "Resource"}
+              className="resource-card-image"
+            />
           )}
         </div>
 

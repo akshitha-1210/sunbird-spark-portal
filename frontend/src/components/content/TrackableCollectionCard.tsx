@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { TrackableCollection } from "@/types/TrackableCollections";
 import { FiBookOpen } from "react-icons/fi";
+import ContentThumbnailPlaceholder from "@/components/common/ContentThumbnailPlaceholder";
 
 
 interface TrackableCollectionCardProps {
@@ -25,7 +26,10 @@ const TrackableCollectionCard = ({ course, index }: TrackableCollectionCardProps
             className="w-[7.5rem] h-[7.5rem] rounded-2xl object-cover flex-shrink-0 shadow-sm"
           />
         ) : (
-          <div className="w-[7.5rem] h-[7.5rem] rounded-2xl bg-black flex-shrink-0 shadow-sm" />
+          <ContentThumbnailPlaceholder
+            title={course.courseName}
+            className="w-[7.5rem] h-[7.5rem] rounded-2xl flex-shrink-0 shadow-sm"
+          />
         )}
 
         {/* Content */}
