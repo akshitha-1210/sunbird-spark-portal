@@ -40,10 +40,19 @@ router.get('/login',
             const callbackUrl = `${envConfig.DOMAIN_URL}/portal/auth/callback`;
             const rawPrompt = req.query.prompt as string | undefined;
             const allowedPrompts = ['none', 'login', 'consent', 'select_account'];
-            // Default to prompt=none for silent re-auth when Keycloak SSO session is active.
-            // If no SSO session exists, Keycloak returns login_required which the callback
-            // handler redirects to /portal/login?prompt=login for interactive login.
-            const promptParam = allowedPrompts.includes(rawPrompt as string) ? rawPrompt : 'none';
+
+            // max_age=0 forces fresh authentication — Keycloak always shows the login form
+            // because the user must have authenticated within 0 seconds (impossible).
+            // This avoids the "You are already logged in" page that occurs when
+            // prompt=none or prompt=login is used with an active Keycloak SSO session.
+            const rawMaxAge = req.query.max_age as string | undefined;
+            const maxAge = rawMaxAge !== undefined && /^\d+$/.test(rawMaxAge) ? parseInt(rawMaxAge, 10) : undefined;
+
+            // When max_age is specified (user-initiated login), omit prompt so Keycloak
+            // shows the login form. When prompt is explicitly provided (e.g. prompt=none
+            // from requireAuth), use that. Otherwise default to prompt=none for silent re-auth.
+            const explicitPrompt = allowedPrompts.includes(rawPrompt as string) ? rawPrompt : undefined;
+            const promptParam = maxAge !== undefined ? explicitPrompt : (explicitPrompt ?? 'none');
 
             const redirectTo = oidcClient.buildAuthorizationUrl(config, {
                 redirect_uri: callbackUrl,
@@ -52,6 +61,7 @@ router.get('/login',
                 code_challenge_method: 'S256',
                 state: state,
                 ...(promptParam ? { prompt: promptParam } : {}),
+                ...(maxAge !== undefined ? { max_age: maxAge } : {}),
             });
 
             logger.info('Redirecting to OIDC provider for login');
@@ -73,10 +83,12 @@ router.get('/auth/callback',
             const error = req.query.error as string;
             logger.warn(`OIDC callback received error: ${error}`);
 
-            // login_required / interaction_required means prompt=none was used
-            // but the user has no active SSO session — fall back to interactive login
+            // login_required / interaction_required means prompt=none was used but silent
+            // auth failed. Fall back to interactive login using max_age=0 (forces fresh
+            // authentication) instead of prompt=login, which triggers "You are already
+            // logged in" on some Keycloak configurations when an SSO session exists.
             if (error === 'login_required' || error === 'interaction_required') {
-                return res.redirect('/portal/login?prompt=login');
+                return res.redirect('/portal/login?max_age=0');
             }
 
             // For other errors, redirect to home
