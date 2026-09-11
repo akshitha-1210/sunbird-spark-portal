@@ -8,6 +8,9 @@ on:
 env:
   BUILD_DOCKER_IMAGE: ${{ vars.BUILD_DOCKER_IMAGE || 'true' }}
 
+permissions:
+  contents: read
+
 jobs:
   docker-build-push:
     runs-on: ubuntu-latest
